@@ -25,3 +25,28 @@
 #container a {
   text-decoration: none;
 }
+
+.imagen{
+  display: block;
+}
+
+img {
+  width: 16rem;
+  height: 16rem;
+  margin: 0 auto;
+}
+
+.saved-image-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.saved-image-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.saved-image-content p {
+  margin: 5px 0;
+}
