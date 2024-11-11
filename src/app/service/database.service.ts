@@ -58,4 +58,9 @@ export class DatabaseService {
     const result = await this.db?.query(query);
     return result?.values || [];
   }
+
+  async deleteImage(id: number) {
+    const query = `DELETE FROM images WHERE id = ?;`;
+    await this.db?.run(query, [id]);
+  }
 }

@@ -1,54 +1,140 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { DatabaseService } from '../service/database.service';
 import {
   LocalNotifications,
   ScheduleOptions,
 } from '@capacitor/local-notifications';
+import { AlertController } from '@ionic/angular';
+import { Preferences } from '@capacitor/preferences';
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
-export class HomePage {
+export class HomePage implements OnInit {
   photo: string | undefined;
   description: string | undefined;
   images: any[] = [];
+  isButtonDisabled = false;
+  countdown: number | null = null;
 
-  async ngOnInit() {}
+  async ngOnInit() {
+    await this.databaseService.initializeDabatabase();
+    await this.loadImages();
+    await this.loadState();
+    await this.requestPermission();
 
-  async scheduleNotification() {
+    LocalNotifications.addListener(
+      'localNotificationReceived',
+      (notification) => {
+        console.log('Notificación recibida: ', notification);
+        this.isButtonDisabled = false;
+        this.countdown = null;
+      }
+    );
+  }
+
+  async requestPermission() {
     try {
       const value = await LocalNotifications.requestPermissions();
-      if (value.display !== 'granted') {
-        alert('Notification permissions are not granted');
-        return;
+      if (value.display === 'granted') {
+        LocalNotifications.addListener(
+          'localNotificationActionPerformed',
+          async (notification) => {
+            console.log('Notificación activada: ', notification);
+            this.isButtonDisabled = false;
+            this.countdown = null;
+
+            await Preferences.set({ key: 'isButtonDisabled', value: 'false' });
+            await Preferences.remove({ key: 'endTime' });
+          }
+        );
       }
     } catch (error) {
       alert(JSON.stringify(error));
     }
+  }
 
-    let options: ScheduleOptions = {
+  async scheduleNotification() {
+    const notificationTime = new Date(Date.now() + 30 * 1000); // 20 segundos a partir de ahora
+    // alert('Notificación programada para: ' + notificationTime.toLocaleString());
+
+    const options: ScheduleOptions = {
       notifications: [
         {
-          id: 111,
-          title: 'Prueba notificacion',
-          body: 'Esto es una prueba de notificacion',
-          largeBody: 'Notficaciones de pruebas de la aplicacion',
-          summaryText: 'Resumen de la notificacion',
+          title: 'Notificación programada',
+          body: 'Esta notificación se envió después de 30 segundos',
+          id: Math.floor(Math.random() * 100000),
+          schedule: { at: notificationTime },
+          sound: 'default', // Especifica el sonido aquí
+          attachments: undefined,
+          actionTypeId: '',
+          extra: null,
         },
       ],
     };
 
     try {
       await LocalNotifications.schedule(options);
+      // alert('Notificación programada');
+      this.startCountdown(30);
     } catch (error) {
       alert(JSON.stringify(error));
     }
   }
 
-  constructor(private databaseService: DatabaseService) {
-    this.loadImages();
+  handleButtonClick() {
+    this.isButtonDisabled = true;
+    Preferences.set({ key: 'isButtonDisabled', value: 'true' });
+    this.scheduleNotification();
+  }
+
+  async startCountdown(seconds: number) {
+    const endTime = Date.now() + seconds * 1000;
+    await Preferences.set({ key: 'endTime', value: endTime.toString() });
+
+    this.countdown = seconds;
+    const interval = setInterval(async () => {
+      const now = Date.now();
+      const timeLeft = Math.max(0, Math.floor((endTime - now) / 1000));
+      this.countdown = timeLeft;
+
+      if (this.countdown <= 0) {
+        clearInterval(interval);
+        this.isButtonDisabled = false;
+        await Preferences.set({ key: 'isButtonDisabled', value: 'false' });
+        await Preferences.remove({ key: 'endTime' });
+      }
+    }, 1000);
+  }
+
+  constructor(
+    private databaseService: DatabaseService,
+    private alertController: AlertController
+  ) {}
+
+  async loadState() {
+    const buttonState = await Preferences.get({ key: 'isButtonDisabled' });
+    const endTimeValue = await Preferences.get({ key: 'endTime' });
+
+    this.isButtonDisabled = buttonState.value === 'true';
+
+    if (endTimeValue.value) {
+      const endTime = parseInt(endTimeValue.value, 10);
+      const now = Date.now();
+      const timeLeft = Math.max(0, Math.floor((endTime - now) / 1000));
+
+      if (timeLeft > 0) {
+        this.countdown = timeLeft;
+        this.startCountdown(timeLeft);
+      } else {
+        this.isButtonDisabled = false;
+        this.countdown = null;
+        await Preferences.set({ key: 'isButtonDisabled', value: 'false' });
+        await Preferences.remove({ key: 'endTime' });
+      }
+    }
   }
 
   async takePhoto() {
@@ -77,9 +163,36 @@ export class HomePage {
       );
       this.photo = undefined;
       this.description = undefined;
+      this.handleButtonClick();
       this.loadImages();
     } else {
       alert('Debe seleccionar una imagen y escribir una descripcion');
     }
+  }
+
+  async deleteImage(id: number) {
+    await this.databaseService.deleteImage(id);
+    await this.loadImages();
+  }
+
+  async confirmDeleteImage(id: number) {
+    const alert = await this.alertController.create({
+      header: 'Confirmar eliminación',
+      message: '¿Está seguro de que desea eliminar esta imagen?',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+        },
+        {
+          text: 'Eliminar',
+          handler: () => {
+            this.deleteImage(id);
+          },
+        },
+      ],
+    });
+
+    await alert.present();
   }
 }

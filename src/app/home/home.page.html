@@ -16,11 +16,10 @@
   <ion-item class="imagen">
     <img *ngIf="photo" [src]="photo" alt="Photo" />
   </ion-item>
-  <ion-button (click)="saveImage()">Guardar</ion-button>
-
-  <div>
-    <ion-button (click)="scheduleNotification()">Notificacion</ion-button>
-  </div>
+  <ion-button [disabled]="isButtonDisabled" (click)="saveImage();"
+    >Guardar</ion-button
+  >
+  <p *ngIf="isButtonDisabled">Proxima foto en: {{ countdown }} segundos</p>
 
   <div *ngIf="images.length > 0">
     <h2>Imágenes guardadas</h2>
@@ -29,6 +28,9 @@
         <p>{{ image.description }}</p>
         <img [src]="image.image" alt="Saved Photo" />
         <p>{{ image.date }}</p>
+        <ion-button color="danger" (click)="deleteImage(image.id)"
+          >Eliminar</ion-button
+        >
       </div>
     </ion-item>
   </div>
