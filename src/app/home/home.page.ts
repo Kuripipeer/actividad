@@ -82,8 +82,8 @@ export class HomePage implements OnInit {
     const options: ScheduleOptions = {
       notifications: [
         {
-          title: 'Notificación programada',
-          body: 'Esta notificación se envió después de 30 segundos',
+          title: 'Hora de guardar un recuerdo',
+          body: 'Guarda un nuevo recuerdo',
           id: Math.floor(Math.random() * 100000),
           schedule: { at: notificationTime },
           sound: 'default', // Especifica el sonido aquí
