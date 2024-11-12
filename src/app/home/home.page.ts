@@ -18,6 +18,25 @@ export class HomePage implements OnInit {
   images: any[] = [];
   isButtonDisabled = false;
   countdown: number | null = null;
+  showIntegrantes = false;
+  integrantes = [
+    {
+      nombre: 'Christian Axel',
+      apellido: 'Moreno Flores',
+    },
+    {
+      nombre: 'Angel Alejandro',
+      apellido: 'Becerra Rojas',
+    },
+    {
+      nombre: 'Grecia',
+      apellido: 'Navarrete Mexicano',
+    },
+    {
+      nombre: 'Ximena',
+      apellido: 'Gutiérrez Pérez',
+    },
+  ];
 
   async ngOnInit() {
     await this.databaseService.initializeDabatabase();
@@ -194,5 +213,9 @@ export class HomePage implements OnInit {
     });
 
     await alert.present();
+  }
+
+  toggleIntegrantes() {
+    this.showIntegrantes = !this.showIntegrantes;
   }
 }

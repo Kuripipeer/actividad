@@ -34,4 +34,13 @@
       </div>
     </ion-item>
   </div>
+
+  <div>
+    <ion-button (click)="toggleIntegrantes()">Mostrar integrantes</ion-button>
+    <div ngIf="showIntegrantes">
+      <ion-item *ngFor="let integrante of integrantes">
+        <p>{{integrante.nombre}} {{integrante.apellido}}</p>
+      </ion-item>
+    </div>
+  </div>
 </ion-content>
