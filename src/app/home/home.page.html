@@ -28,7 +28,7 @@
         <p>{{ image.description }}</p>
         <img [src]="image.image" alt="Saved Photo" />
         <p>{{ image.date }}</p>
-        <ion-button color="danger" (click)="deleteImage(image.id)"
+        <ion-button color="danger" (click)="confirmDeleteImage(image.id)"
           >Eliminar</ion-button
         >
       </div>

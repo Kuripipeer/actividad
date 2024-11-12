@@ -175,10 +175,18 @@ export class HomePage implements OnInit {
   async saveImage() {
     // Guardar la imagen en la base de datos
     if (this.photo && this.description) {
+      const currentDate = new Date();
+      const formattedDate = `${currentDate
+        .getDate()
+        .toString()
+        .padStart(2, '0')}-${(currentDate.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}-${currentDate.getFullYear()}`;
+      const currentTime = currentDate.toLocaleTimeString();
       await this.databaseService.addImage(
         this.photo,
         this.description,
-        new Date().toISOString()
+        `${formattedDate} ${currentTime}`
       );
       this.photo = undefined;
       this.description = undefined;
